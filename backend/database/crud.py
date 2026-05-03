@@ -5,13 +5,20 @@ Keeps route handlers thin; all SQL lives here.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timezone
 from typing import Optional
 
 from .db import User, EmotionHistory, Playlist, UserPreferences
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ── Password Helpers ──────────────────────────────────────────────────────────
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password[:72].encode(), bcrypt.gensalt()).decode()
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain[:72].encode(), hashed.encode())
 
 
 # ── Users ─────────────────────────────────────────────────────────────────────
@@ -20,7 +27,7 @@ async def create_user(db: AsyncSession, username: str, email: str, password: str
     user = User(
         username=username,
         email=email,
-        hashed_password=pwd_ctx.hash(password[:72]),
+        hashed_password=hash_password(password),
     )
     db.add(user)
     await db.commit()
@@ -36,10 +43,6 @@ async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain[:72], hashed)
 
 
 async def update_user_theme(db: AsyncSession, user_id: int, theme: str) -> None:
