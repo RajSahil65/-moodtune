@@ -1,0 +1,22 @@
+# Exclude these from Vercel deployment
+.venv/
+venv/
+.venv-1/
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+*.pkl
+.env
+.git/
+node_modules/
+.pytest_cache/
+*.log
+backend/tests/
+demo.py
+setup_check.py
+train_voice_model.py
+docker-compose.yml
+nixpacks.toml
+railway.toml
+render.yaml

@@ -1,14 +1,6 @@
 """
-app.py — Main FastAPI Application Entry Point
-
-Registers:
-  - CORS middleware
-  - API router (/api/*)
-  - WebSocket endpoint (/ws/face)
-  - Startup/shutdown events (DB init)
-  - Static file serving for frontend
+app.py — FastAPI app compatible with both local dev and Vercel deployment
 """
-
 from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
@@ -26,58 +18,46 @@ from api.websocket import webcam_emotion_endpoint
 settings = get_settings()
 
 
-# ── Startup / Shutdown ────────────────────────────────────────────────────────
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize resources on startup, clean up on shutdown."""
-    logger.info("🚀 Starting Emotion Music AI server...")
+    logger.info("Starting Emotion Music AI server...")
     await init_db()
-    logger.info("✅ Database initialized.")
-    logger.info(f"📊 Text emotion model: {settings.text_emotion_model}")
-    logger.info(f"🎵 Spotify configured: {bool(settings.spotify_client_id)}")
-    logger.info(f"📺 YouTube configured: {bool(settings.youtube_api_key)}")
-    logger.info(f"🤖 GenAI configured:   {bool(settings.openai_api_key)}")
-    logger.info("🌍 Server ready. Visit http://localhost:8000")
+    logger.info("Database initialized.")
+    logger.info(f"Text emotion model : {settings.text_emotion_model}")
+    logger.info(f"Spotify configured : {bool(settings.spotify_client_id)}")
+    logger.info(f"YouTube configured : {bool(settings.youtube_api_key)}")
+    logger.info(f"OpenAI configured  : {bool(settings.openai_api_key)}")
+    logger.info("Server ready.")
     yield
-    logger.info("👋 Shutting down...")
+    logger.info("Shutting down.")
 
-
-# ── App Instance ──────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="Emotion Recognition Music Recommendation API",
-    description=(
-        "Detect emotions from text, voice, and face images, "
-        "then recommend music with generative AI explanations."
-    ),
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
-
+# Allow all origins for Vercel deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.origins_list + ["*"],   # tighten in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Routes ────────────────────────────────────────────────────────────────────
-
 app.include_router(router, prefix="/api")
 
-# WebSocket for real-time webcam
+
 @app.websocket("/ws/face")
 async def face_ws(websocket: WebSocket):
     await webcam_emotion_endpoint(websocket)
 
-# ── Frontend Static Files ─────────────────────────────────────────────────────
 
+# Serve frontend static files (works locally, Vercel handles it via routes)
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 if os.path.isdir(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
@@ -91,17 +71,12 @@ if os.path.isdir(frontend_dir):
         index = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index):
             return FileResponse(index)
-        return {"detail": "Frontend not found. Serve frontend separately on port 3000."}
+        return {"detail": "Not found"}
 
 
-# ── Run ───────────────────────────────────────────────────────────────────────
-
+# Vercel requires the app object to be named 'app'
+# Local dev entry point
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app:app",
-        host=settings.app_host,
-        port=settings.app_port,
-        reload=settings.app_debug,
-        log_level="info",
-    )
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)

@@ -1,57 +1,26 @@
-# ============================================================
-# Emotion Recognition Music Recommendation System
-# requirements.txt
-# ============================================================
+# Vercel-optimized requirements
+# Removed heavy packages (torch, librosa, deepface, opencv) 
+# that exceed Vercel's 250MB limit
 
-# --- Web Framework ---
 fastapi==0.111.0
-uvicorn[standard]==0.29.0
-python-multipart==0.0.9         # File uploads
-websockets==12.0                # Real-time webcam stream
-
-# --- Authentication ---
+uvicorn==0.29.0
+python-multipart==0.0.9
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.1
-
-# --- Database ---
 sqlalchemy==2.0.30
-aiosqlite==0.20.0               # Async SQLite
-
-# --- NLP / Text Emotion ---
-vaderSentiment==3.3.2           # Lightweight sentiment (no model download)
-transformers==4.40.2            # HuggingFace BERT-based models
-torch==2.3.0                    # PyTorch backend
-# Optional heavier model:
-# sentence-transformers==2.7.0
-
-# --- Voice / Audio Emotion ---
-librosa==0.10.2                 # Audio feature extraction
-soundfile==0.12.1               # Audio I/O
+aiosqlite==0.20.0
+vaderSentiment==3.3.2
 numpy==1.26.4
-scikit-learn==1.4.2             # SVM classifier for voice emotion
-
-# --- Face / Vision Emotion ---
-opencv-python-headless==4.9.0.80  # OpenCV (headless for server)
-Pillow==10.3.0                  # Image processing
-fer==22.5.1                     # Facial Emotion Recognition (FER2013 CNN)
-
-# --- Generative AI ---
-anthropic==0.26.1               # Claude API
-
-# --- Music APIs ---
-spotipy==2.23.0                 # Spotify Web API
-google-api-python-client==2.130.0  # YouTube Data API
-
-# --- Utilities ---
-httpx==0.27.0                   # Async HTTP client
-pydantic==2.7.1                 # Data validation
+openai==1.30.1
+anthropic==0.26.1
+spotipy==2.23.0
+google-api-python-client==2.130.0
+httpx==0.27.0
+pydantic==2.7.1
 pydantic-settings==2.2.1
-python-multipart==0.0.9
 aiofiles==23.2.1
-loguru==0.7.2                   # Structured logging
-
-# --- Testing ---
-pytest==8.2.0
-pytest-asyncio==0.23.7
-httpx==0.27.0                   # Test client
+loguru==0.7.2
+scikit-learn==1.4.2
+Pillow==10.3.0
+websockets==12.0
